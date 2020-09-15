@@ -1,0 +1,3 @@
+include ':zxinglibrary'
+include ':app'
+rootProject.name = "Demo"

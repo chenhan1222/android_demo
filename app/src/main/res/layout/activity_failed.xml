@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/fail"
+        android:layout_width="match_parent"
+        android:layout_height="93dp"
+        android:gravity="center_horizontal|center_vertical"
+        android:text="提示：占座失败！"
+        android:textColor="#E91E63"
+        android:textSize="30sp" />
+
+    <Button
+        android:id="@+id/button3_1"
+        android:layout_width="match_parent"
+        android:layout_height="93dp"
+        android:onClick="onButtonClick"
+        android:text="返回主页面"
+        android:textColor="#FFEB3B"
+        android:textSize="36sp" />
+
+</LinearLayout>
