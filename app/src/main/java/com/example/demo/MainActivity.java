@@ -99,7 +99,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     public void run() {
                         super.run();
                         String response;
-                        response = Send.cherStatus("http://59.46.220.242:9092/system/seat", seat, time);
+                        response = Send.checkStatus("http://59.46.220.242:9092/system/seat", seat, time);
                         if (response.equals("ok")) {
                             Intent intent = new Intent();
                             intent.putExtra("seat", seat);

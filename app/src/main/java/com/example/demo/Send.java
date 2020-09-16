@@ -40,8 +40,4 @@ public class Send {
             return e.toString();
         }
     }
-
-    public static String cherStatus(String s, String seat, String time) {
-
-    }
 }
