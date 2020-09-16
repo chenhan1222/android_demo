@@ -6,9 +6,6 @@
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
     <uses-permission android:name="android.permission.FLASHLIGHT"/>
-
-
-
     <application
         android:requestLegacyExternalStorage = "true"
         android:usesCleartextTraffic="true"
@@ -31,7 +28,8 @@
             android:theme="@android:style/Theme.NoTitleBar"
             android:windowSoftInputMode="adjustPan|stateHidden">
         </activity>
-
+        <activity android:name=".FailedActivity"/>
+        <activity android:name=".SuccessActivity"/>
     </application>
 
 </manifest>

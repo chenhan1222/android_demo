@@ -68,7 +68,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         intent.putExtra(Constant.INTENT_ZXING_CONFIG, config);
                         startActivityForResult(intent, REQUEST_CODE_SCAN);
                     }
-
                     @Override
                     public void onFailed(int requestCode, @NonNull List<String> deniedPermissions) {
                         Uri packageURI = Uri.parse("package:" + MainActivity.this.getPackageName());
@@ -113,7 +112,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             MainActivity.this.startActivity(intent);
                         }
                     }
-                };
+                }.start();
             }
         }
     }
