@@ -11,28 +11,32 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
+import com.yanzhenjie.permission.AndPermission;
+import com.yanzhenjie.permission.PermissionListener;
 import com.yzq.zxinglibrary.android.CaptureActivity;
+import com.yzq.zxinglibrary.bean.ZxingConfig;
 import com.yzq.zxinglibrary.common.Constant;
 
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-    private static final  String TAG="MainActivity";
-    /*
-        private static final  String TAG="MainActivity";
-        private  int REQUEST_CODE_SCAN=111;
-       二维码扫描
-       */
-    private Button bt_sc;
-    private int PHOTO_REQUEST_SAOYISAO = 1;
+    private static final String TAG = "MainActivity";
     private int REQUEST_CODE_SCAN = 111;
+    private Button bt_sc;
+    private EditText occupyTime;
+//    private int PHOTO_REQUEST_SAOYISAO = 1;
 
     //用于初始化界面展示的view
     private void initView() {
         bt_sc = (Button) findViewById(R.id.button1_1);
+        occupyTime = (EditText) findViewById(R.id.text_time);
     }
 
     //设置扫描二维码事件
@@ -48,74 +52,69 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setListener();
     }
 
-
-    /**
-     * 重写申请权限操作返回值的方法
-     **/
-
     @Override
-
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-
-        switch (requestCode) {
-            case 1:
-
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-                    // 权限申请成功，扫一扫
-
-                    Intent intent = new Intent(MainActivity.this,
-
-                            CaptureActivity.class);
-
-                    startActivityForResult(intent, REQUEST_CODE_SCAN);
-
-                } else {
-
-                    Toast.makeText(this, "无相机调用权限，扫一扫功能无法使用，", Toast.LENGTH_SHORT).show();
-
-                }
-        }
-    }
-    /*
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
-
-        super.onActivityResult(requestCode, resultCode, intent);
-        switch (requestCode) {
-
-            // 扫一扫返回值
-
-            case 1:
-
-                if (resultCode == RESULT_OK) {
-
-                    String content = intent.getStringExtra(Constant.CODED_CONTENT);
-
-                    Log.d(TAG, "扫一扫返回成功！扫码结果为：" + content);
-
-                }
-
-                break;
-
-            default:
-
-        }
-
-    }
-*/
     public void onClick(View v) {
-        //Intent是一种运行时绑定（run-time binding）机制，它能在程序运行过程中连e接两个不同的组件。
-        //在存放资源代码的文件夹下
+        AndPermission.with(this)
+                .permission(Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE)
+                .callback(new PermissionListener() {
+                    @Override
+                    public void onSucceed(int requestCode, @NonNull List<String> grantPermissions) {
+                        //跳转到CaptureActivity页面
+                        Intent intent = new Intent(MainActivity.this, CaptureActivity.class);
+                        ZxingConfig config = new ZxingConfig();
+                        config.setPlayBeep(true);
+                        config.setShake(true);
+                        //将此页面设置的config对象传递给intent_zxing_config静态常量，CapureActivity中使用
+                        intent.putExtra(Constant.INTENT_ZXING_CONFIG, config);
+                        startActivityForResult(intent, REQUEST_CODE_SCAN);
+                    }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    @Override
+                    public void onFailed(int requestCode, @NonNull List<String> deniedPermissions) {
+                        Uri packageURI = Uri.parse("package:" + MainActivity.this.getPackageName());
+                        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, packageURI);
+                        startActivity(intent);
+                        Toast.makeText(MainActivity.this, "没有权限扫描哟", Toast.LENGTH_LONG).show();
+                    }
+                })
+                .start();
+    }
 
-            requestPermissions(new String[]{Manifest.permission.CAMERA}, PHOTO_REQUEST_SAOYISAO);
-
-        } else {
-            Intent i = new Intent(MainActivity.this, CaptureActivity.class);
-            //启动
-            startActivity(i);
+    //处理扫描的结果，需要多线程处理网络请求，将网络请求新建一个线程
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE_SCAN && resultCode == RESULT_OK) {
+            if (data != null) {
+                final String seat = data.getStringExtra(Constant.CODED_CONTENT);
+                final String time = occupyTime.getText().toString();
+                try {
+                    Log.e(TAG, "seat------" + seat);
+                    Toast.makeText(MainActivity.this, "扫描结果" + seat, Toast.LENGTH_LONG).show();
+                } catch (Exception e) {
+                    Toast.makeText(this, seat, Toast.LENGTH_SHORT).show();
+                }
+                new Thread() {
+                    @Override
+                    public void run() {
+                        super.run();
+                        String response;
+                        response = Send.cherStatus("http://59.46.220.242:9092/system/seat", seat, time);
+                        if (response.equals("ok")) {
+                            Intent intent = new Intent();
+                            intent.putExtra("seat", seat);
+                            intent.putExtra("time", time);
+                            intent.setClass(MainActivity.this, SuccessActivity.class);
+                            MainActivity.this.startActivity(intent);
+                            MainActivity.this.finish();
+                        } else {
+                            Intent intent = new Intent();
+                            intent.setClass(MainActivity.this, FailedActivity.class);
+                            MainActivity.this.startActivity(intent);
+                        }
+                    }
+                };
+            }
         }
     }
 }
